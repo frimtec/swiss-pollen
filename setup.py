@@ -22,17 +22,16 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'swiss-pollen=swiss-pollen.main:main',
+            'swiss-pollen=swiss_pollen.main:main',
         ],
     },
     install_requires=["requests", "pytz"],
     include_package_data=True,
     python_requires=">=3.9",
-    license="Apache 2",
+    license="Apache-2.0",
     keywords="pollen swiss",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent"
     ],
     zip_safe=True
