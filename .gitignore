@@ -1,0 +1,6 @@
+*.iml
+.idea
+venv
+dist
+build
+swiss_pollen.egg-info
