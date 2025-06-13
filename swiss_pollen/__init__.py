@@ -9,6 +9,7 @@ _SWISS_TIMEZONE = timezone('Europe/Zurich')
 _POLLEN_URL = ('https://www.meteoschweiz.admin.ch/'
                'product/output/measured-values/stationsTable/'
                'messwerte-pollen-{}-1h/stationsTable.messwerte-pollen-{}-1h.{}.json')
+_UNIT = "No/m³"
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,28 @@ class Plant(Enum):
         self.key = key
 
 
+class Level(Enum):
+    NONE = ("none", 1)
+    LOW = ("low", 10)
+    MEDIUM = ("medium", 70)
+    STRONG = ("strong", 250)
+    VERY_STRONG = ("very strong", None)
+
+    def __init__(self, description, lower_bound:int):
+        self.description = description
+        self.lower_bound:int = lower_bound
+
+    @staticmethod
+    def level(value:int):
+        for level in Level:
+            bound = level.lower_bound
+            if bound is not None and int(value) <= int(bound):
+                return level
+        return Level.VERY_STRONG
+
+
 class Station:
-    def __init__(self, code, name, canton, altitude, coordinates, latlong):
+    def __init__(self, code:str, name:str, canton:str, altitude, coordinates, latlong):
         self.code = code
         self.name = name
         self.canton = canton
@@ -56,19 +77,21 @@ class Station:
         return hash(self.code)
 
 
-class PollenMeasurement:
-    def __init__(self, plant, value, date):
+class Measurement:
+    def __init__(self, plant:Plant, value:int, unit:str, date:datetime):
         self.plant = plant
         self.value = value
+        self.unit = unit
+        self.level = Level.level(value)
         self.date = date
 
     def __str__(self):
-        return f"PollenMeasurement(plant={self.plant}, value={self.value}, date={self.date})"
+        return f"Measurement(plant={self.plant}, value={self.value}, unit={self.unit}, level={self.level}, date={self.date})"
 
 
 class PollenService:
     @staticmethod
-    def current_values(plants: list[Plant] = Plant) -> dict[Station, list[PollenMeasurement]]:
+    def current_values(plants: list[Plant] = Plant) -> dict[Station, list[Measurement]]:
         pollen_measurements = {}
         for plant in plants:
             url = _POLLEN_URL.format(plant.key, plant.key, "en")
@@ -88,9 +111,10 @@ class PollenService:
                             station_data["latlong"]
                         )
                         measurements = pollen_measurements.setdefault(station, [])
-                        measurements.append(PollenMeasurement(
+                        measurements.append(Measurement(
                             plant,
                             station_data["current"]["value"],
+                            _UNIT,
                             datetime.fromtimestamp(station_data["current"]["date"] / 1000, tz=_SWISS_TIMEZONE)
                         ))
                 else:
