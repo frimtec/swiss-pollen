@@ -43,13 +43,13 @@ class Level(Enum):
     def level(value:int):
         for level in Level:
             bound = level.lower_bound
-            if bound is not None and int(value) <= int(bound):
+            if bound is not None and value <= bound:
                 return level
         return Level.VERY_STRONG
 
 
 class Station:
-    def __init__(self, code:str, name:str, canton:str, altitude, coordinates, latlong):
+    def __init__(self, code:str, name:str, canton:str, altitude:int, coordinates, latlong):
         self.code = code
         self.name = name
         self.canton = canton
@@ -106,14 +106,14 @@ class PollenService:
                             station_data["id"],
                             station_data["station_name"],
                             station_data["canton"],
-                            station_data["altitude"],
+                            int(station_data["altitude"]),
                             station_data["coordinates"],
                             station_data["latlong"]
                         )
                         measurements = pollen_measurements.setdefault(station, [])
                         measurements.append(Measurement(
                             plant,
-                            station_data["current"]["value"],
+                            int(station_data["current"]["value"]),
                             _UNIT,
                             datetime.fromtimestamp(station_data["current"]["date"] / 1000, tz=_SWISS_TIMEZONE)
                         ))
