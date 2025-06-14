@@ -33,7 +33,7 @@ class Level(Enum):
     LOW = ("low", 10)
     MEDIUM = ("medium", 70)
     STRONG = ("strong", 250)
-    VERY_STRONG = ("very strong", None)
+    VERY_STRONG = ("very_strong", None)
 
     def __init__(self, description, lower_bound:int):
         self.description = description
