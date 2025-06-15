@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from enum import Enum
+from dataclasses import dataclass
 
 import requests
 from pytz import timezone
@@ -10,6 +11,7 @@ _POLLEN_URL = ('https://www.meteoschweiz.admin.ch/'
                'product/output/measured-values/stationsTable/'
                'messwerte-pollen-{}-1h/stationsTable.messwerte-pollen-{}-1h.{}.json')
 _UNIT = "No/m³"
+_EXPECTED_DATA_VERSION = "3.0.0"
 
 logger = logging.getLogger(__name__)
 
@@ -47,26 +49,14 @@ class Level(Enum):
                 return level
         return Level.VERY_STRONG
 
-
+@dataclass
 class Station:
-    def __init__(self, code:str, name:str, canton:str, altitude:int, coordinates, latlong):
-        self.code = code
-        self.name = name
-        self.canton = canton
-        self.altitude = altitude
-        self.coordinates = coordinates
-        self.latlong = latlong
-
-    def __str__(self):
-        return (
-            f"Station("
-            f"code={self.code}, "
-            f"name={self.name}, "
-            f"canton={self.canton}, "
-            f"altitude={self.altitude}, "
-            f"coordinates={self.coordinates}, "
-            f"latlong={self.latlong})"
-        )
+    code: str
+    name: str
+    canton: str
+    altitude: int
+    coordinates: list[int]
+    latlong: list[float]
 
     def __eq__(self, other):
         if not isinstance(other, Station):
@@ -77,16 +67,13 @@ class Station:
         return hash(self.code)
 
 
+@dataclass
 class Measurement:
-    def __init__(self, plant:Plant, value:int, unit:str, date:datetime):
-        self.plant = plant
-        self.value = value
-        self.unit = unit
-        self.level = Level.level(value)
-        self.date = date
-
-    def __str__(self):
-        return f"Measurement(plant={self.plant}, value={self.value}, unit={self.unit}, level={self.level}, date={self.date})"
+    plant: Plant
+    value: int
+    unit: str
+    level: Level
+    date: datetime
 
 
 class PollenService:
@@ -101,6 +88,14 @@ class PollenService:
 
                 if response.status_code == 200:
                     json_data = response.json()
+                    logger.debug("Received data: %s", json_data)
+                    version = json_data.get("config", {}).get("version", None)
+                    if version is None:
+                        raise Exception(f"Unknown data format", json_data)
+
+                    if version != _EXPECTED_DATA_VERSION:
+                        logger.warning("Unexpected data version: %s, expected: %s", version, _EXPECTED_DATA_VERSION)
+
                     for station_data in json_data["stations"]:
                         station = Station(
                             station_data["id"],
@@ -111,10 +106,12 @@ class PollenService:
                             station_data["latlong"]
                         )
                         measurements = pollen_measurements.setdefault(station, [])
+                        value = int(station_data["current"]["value"])
                         measurements.append(Measurement(
                             plant,
-                            int(station_data["current"]["value"]),
+                            value,
                             _UNIT,
+                            Level.level(value),
                             datetime.fromtimestamp(station_data["current"]["date"] / 1000, tz=_SWISS_TIMEZONE)
                         ))
                 else:
