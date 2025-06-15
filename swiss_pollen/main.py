@@ -1,5 +1,11 @@
+import logging
 from swiss_pollen import (PollenService, Plant)
 
+# Configure the logging system
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 def print_pollen_data(pollen_data):
     for station in pollen_data.keys():
