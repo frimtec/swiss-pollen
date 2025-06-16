@@ -106,14 +106,15 @@ class PollenService:
                             station_data["latlong"]
                         )
                         measurements = pollen_measurements.setdefault(station, [])
-                        value = int(station_data["current"]["value"])
-                        measurements.append(Measurement(
-                            plant,
-                            value,
-                            _UNIT,
-                            Level.level(value),
-                            datetime.fromtimestamp(station_data["current"]["date"] / 1000, tz=_SWISS_TIMEZONE)
-                        ))
+                        if station_data["current"]["summary"] != "no data":
+                            value = int(station_data["current"]["value"])
+                            measurements.append(Measurement(
+                                plant,
+                                value,
+                                _UNIT,
+                                Level.level(value),
+                                datetime.fromtimestamp(station_data["current"]["date"] / 1000, tz=_SWISS_TIMEZONE)
+                            ))
                 else:
                     logger.error(f"Failed to fetch data. Status code: {response.status_code}")
             except requests.exceptions.RequestException:
