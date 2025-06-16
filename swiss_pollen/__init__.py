@@ -107,7 +107,7 @@ class PollenService:
                         )
                         measurements = pollen_measurements.setdefault(station, [])
                         current = station_data["current"]
-                        if current["summary"] != "no data" or current["value"] is not None:
+                        if current["summary"] != "no data" and current["value"] is not None:
                             value = int(current["value"])
                             measurements.append(Measurement(
                                 plant,
