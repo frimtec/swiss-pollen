@@ -11,7 +11,7 @@ with open(os.path.join(here, "README.md"), "rb") as f:
 
 version = '0.0.0' if '$version'.startswith('$') else '$version'
 setup(
-    name="swiss-pollen",
+    name="swiss_pollen",
     version=version,
     author="Markus Friedli",
     author_email="frimtec@gmx.ch",
@@ -33,6 +33,5 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent"
-    ],
-    zip_safe=True
+    ]
 )
