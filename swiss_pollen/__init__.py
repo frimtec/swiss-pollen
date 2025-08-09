@@ -75,11 +75,17 @@ class Measurement:
     level: Level
     date: datetime
 
+@dataclass
+class PollenResult:
+    backend_version: str
+    current_values: dict[Station, list[Measurement]]
 
 class PollenService:
+
     @staticmethod
-    def current_values(plants: list[Plant] = Plant) -> dict[Station, list[Measurement]]:
+    def load(plants: list[Plant] = Plant) -> PollenResult:
         pollen_measurements = {}
+        version = None
         for plant in plants:
             url = _POLLEN_URL.format(plant.key, plant.key, "en")
             try:
@@ -120,4 +126,10 @@ class PollenService:
                     logger.error(f"Failed to fetch data. Status code: {response.status_code}")
             except requests.exceptions.RequestException:
                 logger.error("Connection failure.")
-        return pollen_measurements
+        return PollenResult(version, pollen_measurements)
+
+    @staticmethod
+    def current_values(plants: list[Plant] = Plant) -> dict[Station, list[Measurement]]:
+        logger.warning("Method current_values is deprecated and will be removed in future versions. Use load instead.")
+        return PollenService.load(plants).current_values
+
