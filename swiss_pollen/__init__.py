@@ -11,7 +11,7 @@ _POLLEN_URL = ('https://www.meteoschweiz.admin.ch/'
                'product/output/measured-values/stationsTable/'
                'messwerte-pollen-{}-1h/stationsTable.messwerte-pollen-{}-1h.{}.json')
 _UNIT = "No/m³"
-_EXPECTED_DATA_VERSION = "3.0.0"
+EXPECTED_DATA_VERSION = "3.0.0"
 
 logger = logging.getLogger(__name__)
 
@@ -99,8 +99,8 @@ class PollenService:
                     if version is None:
                         raise Exception(f"Unknown data format", json_data)
 
-                    if version != _EXPECTED_DATA_VERSION:
-                        logger.warning("Unexpected data version: %s, expected: %s", version, _EXPECTED_DATA_VERSION)
+                    if version != EXPECTED_DATA_VERSION:
+                        logger.warning("Unexpected data version: %s, expected: %s", version, EXPECTED_DATA_VERSION)
 
                     for station_data in json_data["stations"]:
                         station = Station(
