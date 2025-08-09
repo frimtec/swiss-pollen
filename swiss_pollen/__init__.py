@@ -1,7 +1,7 @@
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from dataclasses import dataclass
 
 import requests
 from pytz import timezone
@@ -11,7 +11,7 @@ _POLLEN_URL = ('https://www.meteoschweiz.admin.ch/'
                'product/output/measured-values/stationsTable/'
                'messwerte-pollen-{}-1h/stationsTable.messwerte-pollen-{}-1h.{}.json')
 _UNIT = "No/m³"
-_EXPECTED_DATA_VERSION = "3.0.0"
+EXPECTED_DATA_VERSION = "3.0.0"
 
 logger = logging.getLogger(__name__)
 
@@ -37,17 +37,18 @@ class Level(Enum):
     STRONG = ("strong", 250)
     VERY_STRONG = ("very_strong", None)
 
-    def __init__(self, description, lower_bound:int):
+    def __init__(self, description, lower_bound: int):
         self.description = description
-        self.lower_bound:int = lower_bound
+        self.lower_bound: int = lower_bound
 
     @staticmethod
-    def level(value:int):
+    def level(value: int):
         for level in Level:
             bound = level.lower_bound
             if bound is not None and value <= bound:
                 return level
         return Level.VERY_STRONG
+
 
 @dataclass
 class Station:
@@ -76,10 +77,27 @@ class Measurement:
     date: datetime
 
 
+@dataclass
+class PollenResult:
+    backend_version: str
+    current_values: dict[Station, list[Measurement]]
+
+    def measurement_by_station(self, station: Station, plant: Plant) -> Measurement:
+        return next(filter(lambda m: m.plant == plant, self.current_values.get(station, [])), None)
+
+    def station_by_code(self, station_code: str) -> Station:
+        return next(filter(lambda s: s.code == station_code, self.current_values.keys()), None)
+
+    def measurement_by_station_code(self, station_code: str, plant: Plant) -> Measurement:
+        return self.measurement_by_station(self.station_by_code(station_code), plant)
+
+
 class PollenService:
+
     @staticmethod
-    def current_values(plants: list[Plant] = Plant) -> dict[Station, list[Measurement]]:
+    def load(plants: list[Plant] = Plant) -> PollenResult:
         pollen_measurements = {}
+        version = None
         for plant in plants:
             url = _POLLEN_URL.format(plant.key, plant.key, "en")
             try:
@@ -93,8 +111,8 @@ class PollenService:
                     if version is None:
                         raise Exception(f"Unknown data format", json_data)
 
-                    if version != _EXPECTED_DATA_VERSION:
-                        logger.warning("Unexpected data version: %s, expected: %s", version, _EXPECTED_DATA_VERSION)
+                    if version != EXPECTED_DATA_VERSION:
+                        logger.warning("Unexpected data version: %s, expected: %s", version, EXPECTED_DATA_VERSION)
 
                     for station_data in json_data["stations"]:
                         station = Station(
@@ -120,4 +138,9 @@ class PollenService:
                     logger.error(f"Failed to fetch data. Status code: {response.status_code}")
             except requests.exceptions.RequestException:
                 logger.error("Connection failure.")
-        return pollen_measurements
+        return PollenResult(version, pollen_measurements)
+
+    @staticmethod
+    def current_values(plants: list[Plant] = Plant) -> dict[Station, list[Measurement]]:
+        logger.warning("Method current_values is deprecated and will be removed in future versions. Use load instead.")
+        return PollenService.load(plants).current_values
