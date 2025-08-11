@@ -33,18 +33,18 @@ This module is not official developed, supported or endorsed by [MeteoSchweiz][M
 ```python
 class PollenService:
     @staticmethod
-    def current_values(plants : list[Plant] = Plant) -> dict[Station, list[PollenMeasurement]]
+    def load(plants : list[Plant] = Plant) -> PollenResult
 ```
 
 ### Example
 ```python
 from swiss_pollen import (PollenService, Plant)
 
-# get pollen data for all available plants
-all_pollen_data_per_station = PollenService.current_values()
+# get pollen data for all available plants (requires 7 remote calls, one for each plant)
+all_pollen_data_per_station = PollenService.load()
 
-# get pollen data for a restricted list of plants
-specific_pollen_data_per_station = PollenService.current_values(plants = [Plant.HAZEL, Plant.GRASSES])
+# get pollen data for a restricted list of plants (requires 2 remote calls, one for each plant)
+specific_pollen_data_per_station = PollenService.load(plants = [Plant.HAZEL, Plant.GRASSES])
 ```
 
 [maintenance-shield]: https://img.shields.io/maintenance/yes/2025.svg
