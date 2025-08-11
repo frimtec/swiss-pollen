@@ -11,7 +11,7 @@ _POLLEN_URL = ('https://www.meteoschweiz.admin.ch/'
                'product/output/measured-values/stationsTable/'
                'messwerte-pollen-{}-1h/stationsTable.messwerte-pollen-{}-1h.{}.json')
 _UNIT = "No/m³"
-EXPECTED_DATA_VERSION = "3.0.0"
+EXPECTED_DATA_VERSION = "3.0.1"
 
 logger = logging.getLogger(__name__)
 
