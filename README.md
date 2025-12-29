@@ -47,7 +47,7 @@ all_pollen_data_per_station = PollenService.load()
 specific_pollen_data_per_station = PollenService.load(plants = [Plant.HAZEL, Plant.GRASSES])
 ```
 
-[maintenance-shield]: https://img.shields.io/maintenance/yes/2025.svg
+[maintenance-shield]: https://img.shields.io/maintenance/yes/2026.svg
 [license-shield]: https://img.shields.io/github/license/frimtec/swiss-pollen.svg
 [license]: https://opensource.org/licenses/Apache-2.0
 [pypi-shield]: https://img.shields.io/pypi/v/swiss-pollen.svg 
