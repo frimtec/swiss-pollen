@@ -8,7 +8,7 @@
 [![Build Status][build-status-shield]][build-status]
 [![Deploy Status][deploy-status-shield]][deploy-status]
 
-Python API to gather the current pollen load from [MeteoSchweiz][MeteoSchweiz] for the following pants:
+Python API to gather the current pollen load from [MeteoSchweiz][MeteoSchweiz] for the following plants:
 * birch
 * beech
 * oak
