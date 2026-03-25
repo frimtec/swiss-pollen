@@ -215,3 +215,86 @@ class TestInit(unittest.TestCase):
         )
         self.assertIsNone(result.backend_version)
         self.assertEqual(len(result.current_values), 0)
+
+    def test_level_calculation_no_specific_plant(self):
+        self.assertEqual(Level.level(0), Level.NONE)
+        self.assertEqual(Level.level(1), Level.NONE)
+        self.assertEqual(Level.level(2), Level.LOW)
+        self.assertEqual(Level.level(10), Level.LOW)
+        self.assertEqual(Level.level(11), Level.MEDIUM)
+        self.assertEqual(Level.level(70), Level.MEDIUM)
+        self.assertEqual(Level.level(71), Level.STRONG)
+        self.assertEqual(Level.level(250), Level.STRONG)
+        self.assertEqual(Level.level(251), Level.VERY_STRONG)
+
+
+    def test_level_calculation(self):
+        # birch
+        self.assertEqual(Level.level(0, Plant.BIRCH), Level.NONE)
+        self.assertEqual(Level.level(1, Plant.BIRCH), Level.LOW)
+        self.assertEqual(Level.level(10, Plant.BIRCH), Level.LOW)
+        self.assertEqual(Level.level(11, Plant.BIRCH), Level.MEDIUM)
+        self.assertEqual(Level.level(69, Plant.BIRCH), Level.MEDIUM)
+        self.assertEqual(Level.level(70, Plant.BIRCH), Level.STRONG)
+        self.assertEqual(Level.level(299, Plant.BIRCH), Level.STRONG)
+        self.assertEqual(Level.level(300, Plant.BIRCH), Level.VERY_STRONG)
+
+        # beech
+        self.assertEqual(Level.level(0, Plant.BEECH), Level.NONE)
+        self.assertEqual(Level.level(1, Plant.BEECH), Level.LOW)
+        self.assertEqual(Level.level(49, Plant.BEECH), Level.LOW)
+        self.assertEqual(Level.level(50, Plant.BEECH), Level.MEDIUM)
+        self.assertEqual(Level.level(129, Plant.BEECH), Level.MEDIUM)
+        self.assertEqual(Level.level(130, Plant.BEECH), Level.STRONG)
+        self.assertEqual(Level.level(399, Plant.BEECH), Level.STRONG)
+        self.assertEqual(Level.level(400, Plant.BEECH), Level.VERY_STRONG)
+
+        # oak
+        self.assertEqual(Level.level(0, Plant.OAK), Level.NONE)
+        self.assertEqual(Level.level(1, Plant.OAK), Level.LOW)
+        self.assertEqual(Level.level(49, Plant.OAK), Level.LOW)
+        self.assertEqual(Level.level(50, Plant.OAK), Level.MEDIUM)
+        self.assertEqual(Level.level(129, Plant.OAK), Level.MEDIUM)
+        self.assertEqual(Level.level(130, Plant.OAK), Level.STRONG)
+        self.assertEqual(Level.level(399, Plant.OAK), Level.STRONG)
+        self.assertEqual(Level.level(400, Plant.OAK), Level.VERY_STRONG)
+
+        # alder
+        self.assertEqual(Level.level(0, Plant.ALDER), Level.NONE)
+        self.assertEqual(Level.level(1, Plant.ALDER), Level.LOW)
+        self.assertEqual(Level.level(10, Plant.ALDER), Level.LOW)
+        self.assertEqual(Level.level(11, Plant.ALDER), Level.MEDIUM)
+        self.assertEqual(Level.level(69, Plant.ALDER), Level.MEDIUM)
+        self.assertEqual(Level.level(70, Plant.ALDER), Level.STRONG)
+        self.assertEqual(Level.level(249, Plant.ALDER), Level.STRONG)
+        self.assertEqual(Level.level(250, Plant.ALDER), Level.VERY_STRONG)
+
+        # ash
+        self.assertEqual(Level.level(0, Plant.ASH), Level.NONE)
+        self.assertEqual(Level.level(1, Plant.ASH), Level.LOW)
+        self.assertEqual(Level.level(10, Plant.ASH), Level.LOW)
+        self.assertEqual(Level.level(11, Plant.ASH), Level.MEDIUM)
+        self.assertEqual(Level.level(99, Plant.ASH), Level.MEDIUM)
+        self.assertEqual(Level.level(100, Plant.ASH), Level.STRONG)
+        self.assertEqual(Level.level(349, Plant.ASH), Level.STRONG)
+        self.assertEqual(Level.level(350, Plant.ASH), Level.VERY_STRONG)
+
+        # grasses
+        self.assertEqual(Level.level(0, Plant.GRASSES), Level.NONE)
+        self.assertEqual(Level.level(1, Plant.GRASSES), Level.LOW)
+        self.assertEqual(Level.level(19, Plant.GRASSES), Level.LOW)
+        self.assertEqual(Level.level(20, Plant.GRASSES), Level.MEDIUM)
+        self.assertEqual(Level.level(49, Plant.GRASSES), Level.MEDIUM)
+        self.assertEqual(Level.level(50, Plant.GRASSES), Level.STRONG)
+        self.assertEqual(Level.level(149, Plant.GRASSES), Level.STRONG)
+        self.assertEqual(Level.level(150, Plant.GRASSES), Level.VERY_STRONG)
+
+        # hazel
+        self.assertEqual(Level.level(0, Plant.HAZEL), Level.NONE)
+        self.assertEqual(Level.level(1, Plant.HAZEL), Level.LOW)
+        self.assertEqual(Level.level(10, Plant.HAZEL), Level.LOW)
+        self.assertEqual(Level.level(11, Plant.HAZEL), Level.MEDIUM)
+        self.assertEqual(Level.level(69, Plant.HAZEL), Level.MEDIUM)
+        self.assertEqual(Level.level(70, Plant.HAZEL), Level.STRONG)
+        self.assertEqual(Level.level(249, Plant.HAZEL), Level.STRONG)
+        self.assertEqual(Level.level(250, Plant.HAZEL), Level.VERY_STRONG)

@@ -19,7 +19,7 @@ Python API to gather the current pollen load from [MeteoSchweiz][MeteoSchweiz] f
 
 For the use within [Home Assistant][home-assistant] use the custom component [hass-swiss-pollen][hass-swiss-pollen].
 
-This module is not official developed, supported or endorsed by [MeteoSchweiz][MeteoSchweiz].
+This module is not officially developed, supported or endorsed by [MeteoSchweiz][MeteoSchweiz].
 
 ## Installation
 ### Using pip

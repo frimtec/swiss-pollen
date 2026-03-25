@@ -31,22 +31,41 @@ class Plant(Enum):
 
 
 class Level(Enum):
-    NONE = ("none", 1)
-    LOW = ("low", 10)
-    MEDIUM = ("medium", 70)
-    STRONG = ("strong", 250)
-    VERY_STRONG = ("very_strong", None)
+    NONE = "none"
+    LOW = "low"
+    MEDIUM = "medium"
+    STRONG = "strong"
+    VERY_STRONG = "very_strong"
 
-    def __init__(self, description, lower_bound: int):
+    def __init__(self, description):
         self.description = description
-        self.lower_bound: int = lower_bound
 
     @staticmethod
-    def level(value: int):
-        for level in Level:
-            bound = level.lower_bound
-            if bound is not None and value <= bound:
-                return level
+    def level(value: int, plant: Plant = None):
+        if value <= 0:
+            return Level.NONE
+
+        # Define thresholds: (low_max, moderate_max, high_max)
+        # according to https://www.meteoswiss.admin.ch/dam/jcr:43b4f361-8bc1-4af7-a232-c126de0f2f80/Belastungsklassen-der-allergenen-Pollenarten_E.pdf
+        thresholds = {
+            Plant.BIRCH: (0, 10, 69, 299),
+            Plant.BEECH: (0, 49, 129, 399),
+            Plant.OAK: (0, 49, 129, 399),
+            Plant.ALDER: (0, 10, 69, 249),
+            Plant.ASH: (0, 10, 99, 349),
+            Plant.GRASSES: (0, 19, 49, 149),
+            Plant.HAZEL: (0, 10, 69, 249),
+        }
+        none, low, moderate, high = thresholds.get(plant, (1, 10, 70, 250))
+
+        if value <= none:
+            return Level.NONE
+        if value <= low:
+            return Level.LOW
+        if value <= moderate:
+            return Level.MEDIUM
+        if value <= high:
+            return Level.STRONG
         return Level.VERY_STRONG
 
 
@@ -131,7 +150,7 @@ class PollenService:
                                 plant,
                                 value,
                                 _UNIT,
-                                Level.level(value),
+                                Level.level(value, plant),
                                 datetime.fromtimestamp(current["date"] / 1000, tz=_SWISS_TIMEZONE)
                             ))
                 else:
