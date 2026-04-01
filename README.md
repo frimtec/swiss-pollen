@@ -23,7 +23,7 @@ This module is not officially developed, supported or endorsed by [MeteoSchweiz]
 
 ## Installation
 ### Using pip
-1. Install python3.10 or higher
+1. Install python 3.10 or higher
 1. Install swiss-pollen with ```pip install swiss-pollen```.
 1. Run swiss-pollen test with ```swiss-pollen```.
 
