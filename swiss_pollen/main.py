@@ -11,8 +11,10 @@ def print_pollen_data(pollen_result : PollenResult):
     print(f"Backend version: {pollen_result.backend_version}")
     for station in pollen_result.current_values.keys():
         print(f"* {station}")
-        for measurement in pollen_result.current_values.get(station):
-            print(f" - {measurement}")
+        for plant, stationState in pollen_result.station_states[station].items():
+            print(f" - {plant.name}: {stationState}")
+            for measurement in pollen_result.current_values.get(station):
+                print(f"   - {measurement}")
 
 
 def main():
