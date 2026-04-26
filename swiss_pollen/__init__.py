@@ -69,6 +69,15 @@ class Level(Enum):
         return Level.VERY_STRONG
 
 
+class StationState(Enum):
+    ONLINE = "online",
+    OFFLINE = "offline",
+    ERROR = "error"
+
+    def __init__(self, description):
+        self.description = description
+
+
 @dataclass
 class Station:
     code: str
@@ -100,6 +109,7 @@ class Measurement:
 class PollenResult:
     backend_version: str
     current_values: dict[Station, list[Measurement]]
+    station_states: dict[Station, dict[Plant, StationState]]
 
     def measurement_by_station(self, station: Station, plant: Plant) -> Measurement:
         return next(filter(lambda m: m.plant == plant, self.current_values.get(station, [])), None)
@@ -110,12 +120,16 @@ class PollenResult:
     def measurement_by_station_code(self, station_code: str, plant: Plant) -> Measurement:
         return self.measurement_by_station(self.station_by_code(station_code), plant)
 
+    def station_state_by_station_code(self, station_code: str, plant: Plant) -> StationState:
+        return self.station_states[(self.station_by_code(station_code))][plant]
+
 
 class PollenService:
 
     @staticmethod
     def load(plants: list[Plant] = Plant) -> PollenResult:
         pollen_measurements = {}
+        station_states : dict[Station, dict[Plant, StationState]] = {}
         version = None
         for plant in plants:
             url = _POLLEN_URL.format(plant.key, plant.key, "en")
@@ -134,6 +148,26 @@ class PollenService:
                         logger.warning("Unexpected data version: %s, expected: %s", version, EXPECTED_DATA_VERSION)
 
                     for station_data in json_data["stations"]:
+                        current = station_data["current"]
+
+                        measurement = None
+                        if "summary" not in current:
+                            station_state = StationState.ERROR
+                        elif current["summary"] == "no data":
+                            station_state = StationState.OFFLINE
+                        elif "value" not in current or current["value"] is None:
+                            station_state = StationState.ERROR
+                        else:
+                            station_state = StationState.ONLINE
+                            value = int(current["value"])
+                            measurement = Measurement(
+                                plant,
+                                value,
+                                _UNIT,
+                                Level.level(value, plant),
+                                datetime.fromtimestamp(current["date"] / 1000, tz=_SWISS_TIMEZONE)
+                            )
+
                         station = Station(
                             station_data["id"],
                             station_data["station_name"],
@@ -142,22 +176,15 @@ class PollenService:
                             station_data["coordinates"],
                             station_data["latlong"]
                         )
+                        station_states.setdefault(station, {})[plant] = station_state
                         measurements = pollen_measurements.setdefault(station, [])
-                        current = station_data["current"]
-                        if current["summary"] != "no data" and current["value"] is not None:
-                            value = int(current["value"])
-                            measurements.append(Measurement(
-                                plant,
-                                value,
-                                _UNIT,
-                                Level.level(value, plant),
-                                datetime.fromtimestamp(current["date"] / 1000, tz=_SWISS_TIMEZONE)
-                            ))
+                        if measurement is not None:
+                            measurements.append(measurement)
                 else:
                     logger.error(f"Failed to fetch data. Status code: {response.status_code}")
             except requests.exceptions.RequestException:
                 logger.error("Connection failure.")
-        return PollenResult(version, pollen_measurements)
+        return PollenResult(version, pollen_measurements, station_states)
 
     @staticmethod
     def current_values(plants: list[Plant] = Plant) -> dict[Station, list[Measurement]]:

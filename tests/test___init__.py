@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 
 from pytz import timezone
 
-from swiss_pollen import PollenService, Plant, EXPECTED_DATA_VERSION, Level
+from swiss_pollen import PollenService, Plant, EXPECTED_DATA_VERSION, Level, StationState
 
 
 class TestInit(unittest.TestCase):
@@ -178,7 +178,108 @@ class TestInit(unittest.TestCase):
         self.assertEqual(len(result.current_values), 2)
 
         self.assertEqual(9, result.measurement_by_station_code("PLZ", Plant.HAZEL).value)
+        self.assertEqual(StationState.ONLINE, result.station_state_by_station_code("PLZ", Plant.HAZEL))
+
         self.assertIsNone(result.measurement_by_station_code("PZH", Plant.HAZEL))
+        self.assertEqual(StationState.OFFLINE, result.station_state_by_station_code("PZH", Plant.HAZEL))
+
+        self.assertIsNone(result.measurement_by_station_code("PZH", Plant.GRASSES))
+        self.assertIsNone(result.measurement_by_station_code("XXX", Plant.HAZEL))
+
+
+    @patch("swiss_pollen.requests.get")
+    def test_load_successful_no_value_response(self, mock_get):
+        mock_data = {
+            "config": {
+                "name": "measurement-messwerte-pollen-graeser-1h-stations",
+                "language": "en",
+                "version": "3.0.0",
+                "timestamp": 1754753233957
+            },
+            "stations": [
+                {
+                    "network": "messwerte-pollen-hasel-1h",
+                    "network_type": "messnetz-pollen",
+                    "station_name": "Luzern",
+                    "id": "PLZ",
+                    "current": {
+                        "summary": "Any text but no value"
+                    },
+                    "station_type": "Pollen autom.",
+                    "altitude": "499",
+                    "measurement_height": "36.00 m (on 34.00 m-roof)",
+                    "coordinates": [
+                        2665198,
+                        1212207
+                    ],
+                    "latlong": [
+                        47.057678,
+                        8.296803
+                    ],
+                    "canton": "LU"
+                },
+                {
+                    "network": "messwerte-pollen-hasel-1h",
+                    "network_type": "messnetz-pollen",
+                    "station_name": "Zürich",
+                    "id": "PZH",
+                    "current": {
+                        "summary": "Any text but no value",
+                        "value": None
+                    },
+                    "station_type": "Pollen autom.",
+                    "altitude": "581",
+                    "measurement_height": "22.00 m (on 20.00 m-roof)",
+                    "coordinates": [
+                        2685110,
+                        1248099
+                    ],
+                    "latlong": [
+                        47.378225,
+                        8.565644
+                    ],
+                    "canton": "ZH"
+                },
+                {
+                    "network": "messwerte-pollen-hasel-1h",
+                    "network_type": "messnetz-pollen",
+                    "station_name": "XXX",
+                    "id": "XXX",
+                    "current": {
+                        "value": None
+                    },
+                    "station_type": "Pollen autom.",
+                    "altitude": "581",
+                    "measurement_height": "22.00 m (on 20.00 m-roof)",
+                    "coordinates": [
+                        2685110,
+                        1248099
+                    ],
+                    "latlong": [
+                        47.378225,
+                        8.565644
+                    ],
+                    "canton": "ZH"
+                },
+            ]
+        }
+
+        mock_get.return_value = MagicMock(status_code=200, json=lambda: mock_data)
+
+        result = PollenService.load([Plant.HAZEL])
+
+        self.assertEqual(EXPECTED_DATA_VERSION, result.backend_version)
+        self.assertEqual(len(result.current_values), 3)
+
+        self.assertIsNone(result.measurement_by_station_code("PLZ", Plant.HAZEL))
+        self.assertEqual(StationState.ERROR, result.station_state_by_station_code("PLZ", Plant.HAZEL))
+
+        self.assertIsNone(result.measurement_by_station_code("PZH", Plant.HAZEL))
+        self.assertEqual(StationState.ERROR, result.station_state_by_station_code("PZH", Plant.HAZEL))
+
+        self.assertIsNone(result.measurement_by_station_code("XXX", Plant.HAZEL))
+        self.assertEqual(StationState.ERROR, result.station_state_by_station_code("XXX", Plant.HAZEL))
+
 
     @patch("swiss_pollen.requests.get")
     def test_load_unexpected_version(self, mock_get):
