@@ -3,6 +3,7 @@ from datetime import datetime
 from logging import WARNING, ERROR
 from unittest.mock import patch, MagicMock
 
+import requests
 from pytz import timezone
 
 from swiss_pollen import PollenService, Plant, EXPECTED_DATA_VERSION, Level, StationState
@@ -313,6 +314,24 @@ class TestInit(unittest.TestCase):
         self.assertTrue(
             any("Failed to fetch data" in msg for msg in cm.output),
             f"Expected error not found in logs: {cm.output}"
+        )
+        self.assertIsNone(result.backend_version)
+        self.assertEqual(len(result.current_values), 0)
+
+    @patch("swiss_pollen.requests.get")
+    def test_load_timeout(self, mock_get):
+        mock_get.side_effect = requests.exceptions.Timeout
+
+        with self.assertLogs("swiss_pollen", level=ERROR) as cm:
+            result = PollenService.load([Plant.GRASSES])
+
+        self.assertTrue(
+            any("Request timed out" in msg for msg in cm.output),
+            f"Expected timeout error not found in logs: {cm.output}"
+        )
+        self.assertFalse(
+            any("Connection failure" in msg for msg in cm.output),
+            f"Unexpected connection failure logged: {cm.output}"
         )
         self.assertIsNone(result.backend_version)
         self.assertEqual(len(result.current_values), 0)

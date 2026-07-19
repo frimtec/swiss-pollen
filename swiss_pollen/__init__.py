@@ -11,6 +11,8 @@ _POLLEN_URL = ('https://www.meteoschweiz.admin.ch/'
                'product/output/measured-values/stationsTable/'
                'messwerte-pollen-{}-1h/stationsTable.messwerte-pollen-{}-1h.{}.json')
 _UNIT = "No/m³"
+_REQUEST_TIMEOUT = 10
+
 EXPECTED_DATA_VERSION = "3.0.0"
 
 logger = logging.getLogger(__name__)
@@ -135,7 +137,7 @@ class PollenService:
             url = _POLLEN_URL.format(plant.key, plant.key, "en")
             try:
                 logger.debug("Requesting station data...")
-                response = requests.get(url)
+                response = requests.get(url, timeout=_REQUEST_TIMEOUT)
 
                 if response.status_code == 200:
                     json_data = response.json()
@@ -182,6 +184,8 @@ class PollenService:
                             measurements.append(measurement)
                 else:
                     logger.error(f"Failed to fetch data. Status code: {response.status_code}")
+            except requests.exceptions.Timeout:
+                logger.error("Request timed out after %s seconds.", _REQUEST_TIMEOUT)
             except requests.exceptions.RequestException:
                 logger.error("Connection failure.")
         return PollenResult(version, pollen_measurements, station_states)
